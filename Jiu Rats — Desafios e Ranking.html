@@ -1,0 +1,2625 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jiu Rats — Desafios e Ranking</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/basecoat-css@1.0.2/dist/basecoat.cdn.min.css">
+  <style>
+/* Skip artifact shell — fixed styles served beside every artifact.
+   Complements basecoat; artifacts override --accent for their own identity. */
+:root {
+  color-scheme: light dark;
+  --accent: #2563eb;
+  --accent-contrast: #ffffff;
+  --accent-text: color-mix(in srgb, var(--accent) 72%, #000);
+  --bg: #f8f9fb;
+  --surface: #ffffff;
+  --text: #14171f;
+  --text-muted: #5b6472;
+  --border: rgba(20, 23, 31, 0.10);
+  --radius: 10px;
+  --shadow: 0 1px 3px rgba(20, 23, 31, 0.08);
+  --space: 16px;
+}
+/* Theme resolution. Without data-theme the viewer's system preference decides,
+   as it always did. With it, the artifact's own choice wins in BOTH directions:
+   a page that hardcodes one palette must not be handed the opposite set of
+   tokens by the machine it happens to be opened on. The dark values appear
+   twice because a media query cannot be folded into a selector list.
+   The attribute sits inside :where() so these blocks keep the specificity of a
+   bare :root — the page's own <style> is linked after this file and must go on
+   overriding any token it wants, exactly as it could before. */
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    --accent-text: color-mix(in srgb, var(--accent) 78%, #fff);
+    --bg: #101318;
+    --surface: #181c23;
+    --text: #eef1f6;
+    --text-muted: #9aa4b2;
+    --border: rgba(238, 241, 246, 0.12);
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+}
+:root:where([data-theme="dark"]) {
+  color-scheme: dark;
+  --accent-text: color-mix(in srgb, var(--accent) 78%, #fff);
+  --bg: #101318;
+  --surface: #181c23;
+  --text: #eef1f6;
+  --text-muted: #9aa4b2;
+  --border: rgba(238, 241, 246, 0.12);
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+:root:where([data-theme="light"]) { color-scheme: light; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+img { max-width: 100%; display: block; }
+
+.shell-container { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+.shell-section { padding: calc(var(--space) * 2) 0; }
+.shell-grid { display: grid; gap: var(--space); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.shell-toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: var(--space); }
+.shell-footer { padding: 24px 0 40px; color: var(--text-muted); font-size: 13px; }
+
+.shell-hero { padding: calc(var(--space) * 3) 0 calc(var(--space) * 2); }
+.shell-hero h1 { font-size: clamp(26px, 4vw, 40px); line-height: 1.15; margin: 0 0 10px; text-wrap: balance; }
+.shell-hero p { color: var(--text-muted); max-width: 60ch; margin: 0; }
+
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space);
+}
+
+.kpi { display: flex; flex-direction: column; gap: 4px; }
+.kpi .kpi-value { font-size: 28px; font-weight: 650; line-height: 1.1; }
+.kpi .kpi-label { font-size: 13px; color: var(--text-muted); }
+.kpi .kpi-delta { font-size: 12.5px; font-weight: 600; }
+.kpi .kpi-delta.up { color: #0a8f3c; }
+.kpi .kpi-delta.down { color: #cf3131; }
+
+table.shell-table { border-collapse: collapse; width: 100%; font-size: 14px; }
+table.shell-table th {
+  text-align: left; font-size: 11.5px; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--text-muted); font-weight: 600;
+}
+table.shell-table th, table.shell-table td { padding: 9px 12px 9px 0; border-bottom: 1px solid var(--border); }
+table.shell-table td.num, table.shell-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+table.shell-table tbody tr:hover { background: color-mix(in srgb, var(--accent) 6%, transparent); }
+
+.chart-box { width: 100%; min-height: 220px; }
+.chart-box svg { width: 100%; height: auto; display: block; }
+
+.muted { color: var(--text-muted); }
+.accent { color: var(--accent-text); }
+.shell-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 12%, transparent); color: var(--accent-text);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .shell-fade { animation: shell-fade 400ms ease both; }
+  @keyframes shell-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+}
+
+</style>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap">
+  
+  <style>
+    :root {
+      --accent: #22c55e;
+      --accent-purple: #a855f7;
+      --accent-yellow: #eab308;
+      --accent-blue: #3b82f6;
+      --accent-brown: #854d0e;
+      --accent-black: #1f2937;
+      --belt-white: #f3f4f6;
+      --belt-blue: #2563eb;
+      --belt-purple: #7e22ce;
+      --belt-brown: #78350f;
+      --belt-black: #111827;
+      --surface-elevated: #161b26;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      padding-bottom: 76px;
+      min-height: 100vh;
+      background-color: #0b0e14;
+      color: #f1f5f9;
+    }
+
+    /* Header */
+    .app-header {
+      background: rgba(11, 14, 20, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+    }
+    .header-content {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+    }
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .logo-badge {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 1.1rem;
+      color: #000;
+      box-shadow: 0 0 15px rgba(34, 197, 94, 0.35);
+    }
+    .logo-text {
+      font-weight: 900;
+      font-size: 1.25rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #ffffff;
+      line-height: 1;
+    }
+    .logo-sub {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      color: var(--accent);
+      display: block;
+    }
+
+    /* User switcher pill */
+    .user-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #1a202c;
+      border: 1px solid var(--border-subtle);
+      padding: 4px 10px 4px 6px;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .user-pill:hover {
+      border-color: var(--accent);
+      background: #232b3b;
+    }
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      background: #2d3748;
+    }
+
+    /* Belt pill styling */
+    .belt-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #ffffff;
+    }
+    .belt-Branca { background: #374151; border-left: 6px solid #e5e7eb; color: #f3f4f6; }
+    .belt-Azul { background: #1e3a8a; border-left: 6px solid #3b82f6; }
+    .belt-Roxa { background: #581c87; border-left: 6px solid #a855f7; }
+    .belt-Marrom { background: #451a03; border-left: 6px solid #92400e; }
+    .belt-Preta { background: #0f172a; border-left: 6px solid #ef4444; border: 1px solid #334155; border-left: 6px solid #dc2626; }
+
+    /* Bottom navigation */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 20, 29, 0.95);
+      backdrop-filter: blur(14px);
+      border-top: 1px solid var(--border-subtle);
+      height: 64px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 50;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+    .nav-btn {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      gap: 4px;
+      cursor: pointer;
+      transition: color 0.15s ease, transform 0.15s ease;
+      position: relative;
+      height: 100%;
+    }
+    .nav-btn.active {
+      color: var(--accent);
+    }
+    .nav-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2.2;
+    }
+    .nav-badge {
+      position: absolute;
+      top: 6px;
+      right: calc(50% - 18px);
+      background: #ef4444;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      min-width: 17px;
+      height: 17px;
+      line-height: 17px;
+      text-align: center;
+      border-radius: 9999px;
+      padding: 0 4px;
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+    }
+
+    /* View containers */
+    .app-view {
+      display: none;
+      animation: fadeIn 0.2s ease-in-out;
+    }
+    .app-view.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Cards & Components */
+    .action-card {
+      background: linear-gradient(135deg, #161f2e 0%, #111723 100%);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    }
+    .action-card-highlight {
+      background: linear-gradient(135deg, #13241b 0%, #0e1a17 100%);
+      border: 1px solid rgba(34, 197, 94, 0.25);
+    }
+
+    .stat-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.75rem;
+    }
+    .stat-badge-win { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(74, 222, 128, 0.3); }
+    .stat-badge-draw { background: rgba(234, 179, 8, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); }
+    .stat-badge-loss { background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(248, 113, 113, 0.3); }
+
+    .btn-action-primary {
+      background: var(--accent);
+      color: #052e16;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      border: none;
+      border-radius: 10px;
+      padding: 12px 18px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      width: 100%;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+    }
+    .btn-action-primary:hover {
+      background: #16a34a;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
+    }
+
+    .btn-outline {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: #cbd5e1;
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-outline:hover {
+      border-color: #64748b;
+      color: #fff;
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    /* Modal System */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.82);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+    .modal-overlay.active {
+      display: flex;
+    }
+    .modal-content {
+      background: #121721;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 520px;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+      position: relative;
+    }
+    .modal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 1.5rem;
+      line-height: 1;
+      cursor: pointer;
+      padding: 4px;
+    }
+    .modal-close:hover { color: #fff; }
+
+    /* Forms */
+    .form-group {
+      margin-bottom: 14px;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #94a3b8;
+      margin-bottom: 6px;
+    }
+    .form-input, .form-select {
+      width: 100%;
+      background: #1a2230;
+      border: 1px solid #2d3748;
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: #f8fafc;
+      font-size: 0.9rem;
+      outline: none;
+      box-sizing: border-box;
+      transition: border-color 0.2s ease;
+    }
+    .form-input:focus, .form-select:focus {
+      border-color: var(--accent);
+    }
+
+    /* Podium top 3 */
+    .podium-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.1fr 1fr;
+      gap: 8px;
+      margin-bottom: 20px;
+      align-items: flex-end;
+    }
+    .podium-card {
+      background: #161e2c;
+      border-radius: 12px;
+      padding: 12px 8px;
+      text-align: center;
+      border: 1px solid var(--border-subtle);
+      position: relative;
+      transition: transform 0.2s;
+    }
+    .podium-1 {
+      border-color: rgba(234, 179, 8, 0.4);
+      background: linear-gradient(180deg, #242217 0%, #161e2c 100%);
+      padding-top: 18px;
+      transform: translateY(-6px);
+    }
+    .podium-2 {
+      border-color: rgba(148, 163, 184, 0.3);
+    }
+    .podium-3 {
+      border-color: rgba(180, 83, 9, 0.3);
+    }
+
+    /* Filters pill row */
+    .pill-filter-bar {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 14px;
+      scrollbar-width: none;
+    }
+    .pill-filter-bar::-webkit-scrollbar { display: none; }
+    .pill-btn {
+      background: #192130;
+      color: #94a3b8;
+      border: 1px solid #2d3748;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .pill-btn.active {
+      background: var(--accent);
+      color: #052e16;
+      border-color: var(--accent);
+    }
+
+    /* Ranking row */
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      background: #131924;
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      margin-bottom: 8px;
+      gap: 12px;
+      transition: border-color 0.15s;
+    }
+    .ranking-item.highlight-me {
+      border-color: rgba(34, 197, 94, 0.5);
+      background: #15221b;
+    }
+    .ranking-pos {
+      width: 28px;
+      font-weight: 900;
+      font-size: 1.1rem;
+      text-align: center;
+      color: #64748b;
+    }
+    .ranking-pos.top-1 { color: #facc15; }
+    .ranking-pos.top-2 { color: #cbd5e1; }
+    .ranking-pos.top-3 { color: #d97706; }
+
+    /* Feed item */
+    .challenge-card {
+      background: #151b26;
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 12px;
+    }
+    .challenge-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+    .challenge-fighters {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin: 10px 0;
+    }
+    .fighter-box {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow: hidden;
+    }
+    .vs-pill {
+      background: #253042;
+      color: #94a3b8;
+      font-size: 0.65rem;
+      font-weight: 900;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    /* Radio cards */
+    .criteria-option {
+      border: 1px solid #2d3748;
+      background: #18202d;
+      border-radius: 10px;
+      padding: 14px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      transition: all 0.2s ease;
+    }
+    .criteria-option.selected {
+      border-color: var(--accent);
+      background: #12241d;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-100px);
+      background: #1e293b;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      z-index: 200;
+      font-weight: 600;
+      font-size: 0.85rem;
+      transition: transform 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Mass Action Bar */
+    .mass-action-bar {
+      position: fixed;
+      bottom: 74px;
+      left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      background: #182232;
+      border: 1px solid #3b82f6;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      border-radius: 14px;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      z-index: 60;
+      width: calc(100% - 32px);
+      max-width: 640px;
+      transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .mass-action-bar.visible {
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* Action icons / buttons inside lists */
+    .btn-icon {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      color: #94a3b8;
+      width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: all 0.15s ease;
+      padding: 0;
+      flex-shrink: 0;
+    }
+    .btn-icon:hover {
+      color: #fff;
+      border-color: #64748b;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .btn-icon.btn-icon-danger:hover {
+      color: #f87171;
+      border-color: rgba(239, 68, 68, 0.5);
+      background: rgba(239, 68, 68, 0.1);
+    }
+    .athlete-checkbox {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .mass-select-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: #0f1521;
+      border: 1px dashed var(--border-subtle);
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 0.75rem;
+      color: #94a3b8;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toast" class="toast">Ação concluída com sucesso!</div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="shell-container header-content">
+      <div class="logo-container" onclick="navigate('home')">
+        <div class="logo-badge">🥋</div>
+        <div>
+          <span class="logo-text">JIU RATS</span>
+          <span class="logo-sub">DESAFIOS & RANKING</span>
+        </div>
+      </div>
+
+      <div class="user-pill" onclick="openAthleteSwitcher()" title="Trocar atleta ativo">
+        <div id="header-avatar" class="user-avatar">🥋</div>
+        <div style="line-height: 1.1;">
+          <div id="header-user-name" style="font-size: 0.75rem; font-weight: 700; max-width: 90px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Atleta</div>
+          <div id="header-user-belt" class="belt-tag belt-Branca" style="font-size: 0.6rem; padding: 1px 4px;">Branca</div>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+      </div>
+    </div>
+  </header>
+
+  <main class="shell-container" style="padding-top: 16px; padding-bottom: 24px;">
+
+    <!-- ==================== ABA 1: INÍCIO ==================== -->
+    <section id="view-home" class="app-view active">
+      <!-- Banner Meu Status -->
+      <div class="action-card action-card-highlight">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+          <div>
+            <span style="font-size: 0.7rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.05em;">SEU CARTÃO DE COMBATE</span>
+            <h2 id="home-greeting" style="font-size: 1.3rem; font-weight: 800; margin: 2px 0 0 0; text-transform: uppercase;">Olá, Guerreiro!</h2>
+            <div id="home-academy" style="font-size: 0.8rem; color: #94a3b8;">Academia Gracie Barra</div>
+          </div>
+          <div style="display:flex; gap:6px;">
+          <button class="btn-outline" onclick="openEditAthleteModal(activeAthleteId)">✏️ Editar</button>
+          <button class="btn-outline" style="border-color: rgba(239, 68, 68, 0.4); color: #f87171;" onclick="deleteSingleAthlete(activeAthleteId)">🗑️</button>
+        </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; margin-top: 14px; background: rgba(0,0,0,0.25); border-radius: 10px; padding: 10px 6px;">
+          <div>
+            <div id="home-pts" style="font-size: 1.25rem; font-weight: 900; color: #4ade80;">0</div>
+            <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 700;">PONTOS</div>
+          </div>
+          <div>
+            <div id="home-wins" style="font-size: 1.25rem; font-weight: 900; color: #f8fafc;">0</div>
+            <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 700;">VITÓRIAS</div>
+          </div>
+          <div>
+            <div id="home-draws" style="font-size: 1.25rem; font-weight: 900; color: #facc15;">0</div>
+            <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 700;">EMPATES</div>
+          </div>
+          <div>
+            <div id="home-losses" style="font-size: 1.25rem; font-weight: 900; color: #f87171;">0</div>
+            <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 700;">DERROTAS</div>
+          </div>
+        </div>
+
+        <div style="margin-top: 14px; display: flex; gap: 8px;">
+          <button class="btn-action-primary" onclick="openNewChallengeModal()">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Lançar Desafio
+          </button>
+          <button class="btn-outline" style="min-width: 110px;" onclick="openPromoteModal()">
+            Subir Faixa ⬆️
+          </button>
+        </div>
+      </div>
+
+      <!-- Pendências Imediatas (Se houver) -->
+      <div id="home-pending-box" style="display: none; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+          <span style="font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #f87171; letter-spacing: 0.05em;">Desafios Aguardando Você</span>
+          <span class="stat-badge stat-badge-loss" id="home-pending-count">0 pendentes</span>
+        </div>
+        <div id="home-pending-list"></div>
+      </div>
+
+      <!-- Acesso Rápido / Destaques do Ranking -->
+      <div style="margin-bottom: 20px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h3 style="font-size: 0.9rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0;">Líderes Nacionais da sua Faixa</h3>
+          <button class="btn-outline" style="font-size: 0.72rem; padding: 4px 10px;" onclick="navigate('ranking')">Ver Completo →</button>
+        </div>
+        <div id="home-belt-leaders" style="display: flex; flex-direction: column; gap: 8px;"></div>
+      </div>
+
+      <!-- Botão para Carregar Dados de Demonstração se lista estiver quase vazia -->
+      <div class="action-card" style="border-style: dashed; text-align: center; background: #0f141e;">
+        <h4 style="margin: 0 0 6px 0; font-size: 0.95rem;">Testando o aplicativo?</h4>
+        <p style="font-size: 0.75rem; color: #94a3b8; margin: 0 0 12px 0;">Carregue atletas brasileiros de demonstração com histórico completo de lutas para ver o ranking nacional fervendo.</p>
+        <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+          <button class="btn-outline" onclick="loadDemoData()">🥋 Carregar Atletas de Demonstração</button>
+          <button class="btn-outline" onclick="openAddAthleteModal()">+ Adicionar Parceiro</button>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ==================== ABA 2: DESAFIOS ==================== -->
+    <section id="view-challenges" class="app-view">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <div>
+          <h2 style="font-size: 1.25rem; font-weight: 900; margin: 0; text-transform: uppercase;">Arena de Desafios</h2>
+          <div style="font-size: 0.75rem; color: #94a3b8;">Desafie dentro e fora dos tatames</div>
+        </div>
+        <button class="btn-action-primary" style="width: auto; padding: 8px 14px;" onclick="openNewChallengeModal()">
+          + Desafiar
+        </button>
+      </div>
+
+      <!-- Filtro de status de desafio -->
+      <div class="pill-filter-bar">
+        <button class="pill-btn active" onclick="setChallengeFilter('all', this)">Todos</button>
+        <button class="pill-btn" onclick="setChallengeFilter('pending', this)">Pendentes</button>
+        <button class="pill-btn" onclick="setChallengeFilter('accepted', this)">Em Andamento</button>
+        <button class="pill-btn" onclick="setChallengeFilter('completed', this)">Concluídos</button>
+      </div>
+
+      <!-- Lista de Desafios -->
+      <div id="challenges-feed"></div>
+    </section>
+
+
+    <!-- ==================== ABA 3: RANKING NACIONAL ==================== -->
+    <section id="view-ranking" class="app-view">
+      <div style="margin-bottom: 14px;">
+        <h2 style="font-size: 1.25rem; font-weight: 900; margin: 0; text-transform: uppercase;">Ranking Nacional</h2>
+        <div style="font-size: 0.75rem; color: #94a3b8;">Sistema oficial: Vitória (+3) • Empate (+1) • Derrota (0)</div>
+      </div>
+
+      <!-- Filtros por Faixa -->
+      <div class="pill-filter-bar" id="ranking-belt-pills">
+        <button class="pill-btn active" onclick="setRankingBelt('Todas', this)">Todas as Faixas</button>
+        <button class="pill-btn" onclick="setRankingBelt('Branca', this)">Branca</button>
+        <button class="pill-btn" onclick="setRankingBelt('Azul', this)">Azul</button>
+        <button class="pill-btn" onclick="setRankingBelt('Roxa', this)">Roxa</button>
+        <button class="pill-btn" onclick="setRankingBelt('Marrom', this)">Marrom</button>
+        <button class="pill-btn" onclick="setRankingBelt('Preta', this)">Preta</button>
+      </div>
+
+      <!-- Filtros Secundários: Categoria & Academia -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px;">
+        <div>
+          <label class="form-label">Categoria</label>
+          <select id="ranking-gender-filter" class="form-select" onchange="renderRanking()">
+            <option value="Mista">Mista / Todas</option>
+            <option value="Masculino">Masculino</option>
+            <option value="Feminino">Feminino</option>
+          </select>
+        </div>
+        <div>
+          <label class="form-label">Academia</label>
+          <select id="ranking-academy-filter" class="form-select" onchange="renderRanking()">
+            <option value="Todas">Todas as Academias</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Podium Top 3 (renderizado dinamicamente) -->
+      <div id="ranking-podium" class="podium-grid"></div>
+
+      <!-- Barra de Seleção / Ações em Massa no Ranking -->
+      <div class="mass-select-header" id="ranking-mass-header">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; color: #cbd5e1;">
+          <input type="checkbox" id="select-all-ranking" class="athlete-checkbox" onchange="toggleSelectAllVisible(this.checked)">
+          <span>Selecionar todos os atletas visíveis (<span id="visible-athletes-count">0</span>)</span>
+        </label>
+        <span id="selected-summary-badge" style="font-size: 0.7rem; color: var(--accent); font-weight: 700;">0 marcados</span>
+      </div>
+
+      <!-- Tabela / Lista do Ranking -->
+      <div id="ranking-list"></div>
+    </section>
+
+
+    <!-- ==================== ABA 4: PERFIL ==================== -->
+    <section id="view-profile" class="app-view">
+      <div class="action-card" style="text-align: center; padding-top: 24px; position: relative;">
+        <div id="profile-avatar-large" style="width: 72px; height: 72px; border-radius: 50%; background: #1f293d; font-size: 36px; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; border: 3px solid var(--accent);">🥋</div>
+        <h2 id="profile-name" style="font-size: 1.3rem; font-weight: 800; margin: 0; text-transform: uppercase;">Nome do Atleta</h2>
+        <div id="profile-nickname" style="font-size: 0.85rem; color: var(--accent); font-weight: 700; margin-bottom: 4px;">"Apelido"</div>
+        <div id="profile-academy" style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 10px;">Academia Alliance Jiu-Jitsu</div>
+        <div id="profile-belt-badge" class="belt-tag belt-Azul" style="font-size: 0.75rem; padding: 4px 12px;">Faixa Azul</div>
+
+        <div style="display: flex; gap: 8px; justify-content: center; margin-top: 16px; flex-wrap: wrap;">
+          <button class="btn-outline" onclick="openEditAthleteModal(activeAthleteId)">✏️ Editar Perfil</button>
+          <button class="btn-outline" style="border-color: rgba(34, 197, 94, 0.4); color: #4ade80;" onclick="openPromoteModal()">Subir de Faixa 🥋</button>
+          <button class="btn-outline" style="border-color: rgba(239, 68, 68, 0.4); color: #f87171;" onclick="deleteSingleAthlete(activeAthleteId)">🗑️ Excluir Atleta</button>
+        </div>
+      </div>
+
+      <!-- Estatísticas Detalhadas -->
+      <div class="action-card">
+        <h3 style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; margin: 0 0 14px 0; color: #94a3b8; letter-spacing: 0.05em;">Rendimento no Tatame</h3>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <div style="background: #141b26; padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.7rem; color: #94a3b8;">Total de Lutas</div>
+            <div id="stat-total-fights" style="font-size: 1.4rem; font-weight: 900; color: #fff;">0</div>
+          </div>
+          <div style="background: #141b26; padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.7rem; color: #94a3b8;">Taxa de Vitória</div>
+            <div id="stat-win-rate" style="font-size: 1.4rem; font-weight: 900; color: #4ade80;">0%</div>
+          </div>
+          <div style="background: #141b26; padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.7rem; color: #94a3b8;">Posição no Ranking Geral</div>
+            <div id="stat-rank-pos" style="font-size: 1.4rem; font-weight: 900; color: #facc15;">#0</div>
+          </div>
+          <div style="background: #141b26; padding: 12px; border-radius: 8px; border: 1px solid var(--border-subtle);">
+            <div style="font-size: 0.7rem; color: #94a3b8;">Pontos Acumulados</div>
+            <div id="stat-points" style="font-size: 1.4rem; font-weight: 900; color: #60a5fa;">0 pts</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Histórico de Trocas de Faixa -->
+      <div class="action-card">
+        <h3 style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; margin: 0 0 12px 0; color: #94a3b8; letter-spacing: 0.05em;">Histórico de Graduações</h3>
+        <div id="profile-promotions-list">
+          <div style="font-size: 0.8rem; color: #64748b; text-align: center; padding: 10px;">Nenhuma graduação registrada ainda.</div>
+        </div>
+      </div>
+    </section>
+
+
+    <!-- ==================== ABA 5: CONFIGURAÇÕES ==================== -->
+    <section id="view-settings" class="app-view">
+      <div style="margin-bottom: 16px;">
+        <h2 style="font-size: 1.25rem; font-weight: 900; margin: 0; text-transform: uppercase;">Configurações do Jiu Rats</h2>
+        <div style="font-size: 0.75rem; color: #94a3b8;">Critérios e parâmetros do ranking esportivo</div>
+      </div>
+
+      <!-- Card do Critério Configurável de Troca de Faixa -->
+      <div class="action-card">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+          <span style="font-size: 1.2rem;">⚖️</span>
+          <h3 style="font-size: 0.95rem; font-weight: 800; margin: 0; text-transform: uppercase;">Critério de Troca de Faixa</h3>
+        </div>
+        <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 16px; line-height: 1.4;">
+          Escolha como os atletas entram no ranking nacional ao serem promovidos para uma nova faixa. Essa regra se aplica a todos os atletas promovidos no sistema.
+        </p>
+
+        <!-- Opção 1: Recomeçar do fim -->
+        <div id="crit-opt-reset" class="criteria-option selected" onclick="setPromotionCriteria('reset')">
+          <input type="radio" name="promo-crit" id="radio-reset" checked style="margin-top: 3px; accent-color: var(--accent);">
+          <div>
+            <div style="font-weight: 800; font-size: 0.88rem; color: #fff;">1. Recomeçar do Fim (Tradicional)</div>
+            <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px; line-height: 1.35;">
+              O atleta entra no <strong>final do ranking</strong> da nova faixa com <strong>0 pontos</strong>. Ele deve provar seu valor e escalar os degraus contra os novos graduados.
+            </div>
+            <div style="font-size: 0.7rem; color: #4ade80; margin-top: 6px; font-weight: 600;">
+              Exemplo: Líder azul com 30 pontos vai para a faixa roxa como último colocado com 0 pontos.
+            </div>
+          </div>
+        </div>
+
+        <!-- Opção 2: Posição Proporcional -->
+        <div id="crit-opt-proportional" class="criteria-option" onclick="setPromotionCriteria('proportional')">
+          <input type="radio" name="promo-crit" id="radio-proportional" style="margin-top: 3px; accent-color: var(--accent);">
+          <div>
+            <div style="font-weight: 800; font-size: 0.88rem; color: #fff;">2. Posição Proporcional (Mérito Acumulado)</div>
+            <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px; line-height: 1.35;">
+              A posição anterior é respeitada: o atleta entra na nova faixa em um <strong>percentil equivalente</strong> e carrega <strong>50% dos seus pontos</strong> acumulados.
+            </div>
+            <div style="font-size: 0.7rem; color: #a855f7; margin-top: 6px; font-weight: 600;">
+              Exemplo: Atleta no top 10% da faixa azul com 40 pontos entra no top 10% da faixa roxa herdando 20 pontos de partida.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Gerenciamento de Dados -->
+      <div class="action-card">
+        <h3 style="font-size: 0.85rem; font-weight: 800; text-transform: uppercase; margin: 0 0 12px 0; color: #94a3b8; letter-spacing: 0.05em;">Dados Locais</h3>
+        <p style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 14px;">
+          Todos os atletas, desafios e graduações são salvos localmente no seu navegador.
+        </p>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <button class="btn-outline" onclick="loadDemoData()">🔄 Recarregar Atletas de Demonstração (14 Atletas)</button>
+          <button class="btn-outline" style="border-color: rgba(239, 68, 68, 0.4); color: #f87171;" onclick="resetAllData()">🗑️ Limpar Todos os Dados e Reiniciar</button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BARRA FLUTUANTE DE EXCLUSÃO EM MASSA -->
+  <div id="mass-action-bar" class="mass-action-bar">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <span style="font-size: 1.1rem;">🗑️</span>
+      <div>
+        <div id="mass-count-label" style="font-size: 0.85rem; font-weight: 800; color: #fff;">0 atletas selecionados</div>
+        <div style="font-size: 0.68rem; color: #94a3b8;">Ação irreversível no ranking e desafios</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button class="btn-outline" style="padding: 6px 10px; font-size: 0.72rem;" onclick="clearSelection()">Desmarcar todos</button>
+      <button class="btn-action-primary" style="background: #ef4444; color: #fff; width: auto; padding: 6px 14px; font-size: 0.75rem;" onclick="openMassDeleteConfirmModal()">Excluir selecionados</button>
+    </div>
+  </div>
+
+
+  <!-- ==================== BARRA DE NAVEGAÇÃO INFERIOR ==================== -->
+  <nav class="bottom-nav">
+    <button class="nav-btn active" onclick="navigate('home')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+      <span>INÍCIO</span>
+    </button>
+    <button class="nav-btn" onclick="navigate('challenges')">
+      <span id="nav-pending-badge" class="nav-badge" style="display: none;">0</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+      <span>DESAFIOS</span>
+    </button>
+    <button class="nav-btn" onclick="navigate('ranking')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+      <span>RANKING</span>
+    </button>
+    <button class="nav-btn" onclick="navigate('profile')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      <span>PERFIL</span>
+    </button>
+    <button class="nav-btn" onclick="navigate('settings')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      <span>AJUSTES</span>
+    </button>
+  </nav>
+
+
+  <!-- ==================== MODAIS ==================== -->
+
+  <!-- Modal: Lançar Desafio -->
+  <div id="modal-challenge" class="modal-overlay">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal('modal-challenge')">&times;</button>
+      <h3 style="margin: 0 0 4px 0; font-size: 1.15rem; font-weight: 800; text-transform: uppercase;">Lançar Novo Desafio</h3>
+      <p style="font-size: 0.75rem; color: #94a3b8; margin: 0 0 16px 0;">Escolha seu oponente e defina as condições do combate.</p>
+
+      <form id="form-challenge" onsubmit="handleCreateChallenge(event)">
+        <div class="form-group">
+          <label class="form-label">Oponente</label>
+          <select id="challenge-opponent" class="form-select" required></select>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group">
+            <label class="form-label">Categoria</label>
+            <select id="challenge-category" class="form-select" required>
+              <option value="Mista">Mista</option>
+              <option value="Masculino">Masculino</option>
+              <option value="Feminino">Feminino</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Local</label>
+            <select id="challenge-location" class="form-select" required>
+              <option value="Dentro da academia">Dentro da Academia</option>
+              <option value="Fora (Aberto/Rua)">Fora da Academia</option>
+              <option value="Campeonato / Torneio">Campeonato / Torneio</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Data Agendada</label>
+          <input type="date" id="challenge-date" class="form-input" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Observações / Peso / Regras (Opcional)</label>
+          <input type="text" id="challenge-notes" class="form-input" placeholder="Ex: De kimono, sem valer chave de calcanhar...">
+        </div>
+
+        <button type="submit" class="btn-action-primary" style="margin-top: 10px;">Enviar Desafio 🥋</button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- Modal: Registrar Resultado -->
+  <div id="modal-result" class="modal-overlay">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal('modal-result')">&times;</button>
+      <h3 style="margin: 0 0 4px 0; font-size: 1.15rem; font-weight: 800; text-transform: uppercase;">Registrar Resultado</h3>
+      <p style="font-size: 0.75rem; color: #94a3b8; margin: 0 0 16px 0;">Quem levou a melhor nesse combate?</p>
+
+      <div id="result-match-info" style="background: #18202d; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 0.85rem; text-align: center; font-weight: 700;"></div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button id="btn-result-p1" class="btn-outline" style="padding: 14px; text-align: left; font-size: 0.9rem; font-weight: 700; border-color: rgba(34, 197, 94, 0.4);" onclick="submitResult('challenger')">
+          🏆 Vitória de <span id="res-name-p1">Desafiante</span> (+3 pts)
+        </button>
+        <button id="btn-result-p2" class="btn-outline" style="padding: 14px; text-align: left; font-size: 0.9rem; font-weight: 700; border-color: rgba(34, 197, 94, 0.4);" onclick="submitResult('opponent')">
+          🏆 Vitória de <span id="res-name-p2">Oponente</span> (+3 pts)
+        </button>
+        <button class="btn-outline" style="padding: 14px; text-align: left; font-size: 0.9rem; font-weight: 700; border-color: rgba(234, 179, 8, 0.4);" onclick="submitResult('draw')">
+          🤝 Empate (Combate parelho) (+1 pt cada)
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Modal: Editar Atleta (Qualquer atleta ou perfil ativo) -->
+  <div id="modal-profile" class="modal-overlay">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal('modal-profile')">&times;</button>
+      <h3 id="edit-modal-title" style="margin: 0 0 4px 0; font-size: 1.15rem; font-weight: 800; text-transform: uppercase;">Editar Atleta</h3>
+      <p style="font-size: 0.75rem; color: #94a3b8; margin: 0 0 16px 0;">Atualize os dados esportivos do atleta. Trocas de faixa aplicam o critério oficial configurado.</p>
+
+      <form id="form-profile" onsubmit="handleSaveAthleteEdit(event)">
+        <input type="hidden" id="edit-athlete-target-id">
+
+        <div class="form-group">
+          <label class="form-label">Nome Completo</label>
+          <input type="text" id="prof-input-name" class="form-input" required placeholder="Ex: Carlos Gracie">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group">
+            <label class="form-label">Apelido de Tatame</label>
+            <input type="text" id="prof-input-nickname" class="form-input" required placeholder="Ex: Pitbull">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Emoji / Avatar</label>
+            <select id="prof-input-avatar" class="form-select">
+              <option value="🥋">🥋 Kimono</option>
+              <option value="🦁">🦁 Leão</option>
+              <option value="🐺">🐺 Lobo</option>
+              <option value="⚡">⚡ Raio</option>
+              <option value="🐍">🐍 Sucuri</option>
+              <option value="🦅">🦅 Águia</option>
+              <option value="🦍">🦍 Gorila</option>
+              <option value="🦈">🦈 Tubarão</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Academia / Equipe</label>
+          <input type="text" id="prof-input-academy" class="form-input" required placeholder="Ex: Alliance, Gracie Barra, Checkmat...">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group">
+            <label class="form-label">Gênero</label>
+            <select id="prof-input-gender" class="form-select" required>
+              <option value="Masculino">Masculino</option>
+              <option value="Feminino">Feminino</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Faixa Atual</label>
+            <select id="prof-input-belt" class="form-select" required>
+              <option value="Branca">Faixa Branca</option>
+              <option value="Azul">Faixa Azul</option>
+              <option value="Roxa">Faixa Roxa</option>
+              <option value="Marrom">Faixa Marrom</option>
+              <option value="Preta">Faixa Preta</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="belt-change-notice" style="display:none; background: #18202d; border: 1px solid #3b82f6; padding: 10px; border-radius: 8px; font-size: 0.72rem; color: #93c5fd; margin-bottom: 12px;">
+          ℹ️ Alteração de faixa detectada: o critério configurado (<span id="notice-criterion-name">Recomeçar do Fim</span>) será aplicado automaticamente à pontuação.
+        </div>
+
+        <button type="submit" class="btn-action-primary" style="margin-top: 10px;">Salvar Alterações</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal: Confirmação de Exclusão em Massa -->
+  <div id="modal-confirm-mass-delete" class="modal-overlay">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal('modal-confirm-mass-delete')">&times;</button>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+        <span style="font-size: 1.6rem;">⚠️</span>
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; text-transform: uppercase; color: #f87171;">Confirmar Exclusão em Massa</h3>
+      </div>
+      <p style="font-size: 0.8rem; color: #cbd5e1; margin: 0 0 12px 0;">
+        Você está prestes a excluir definitivamente os seguintes atletas e todos os seus desafios vinculados:
+      </p>
+
+      <div id="mass-delete-names-list" style="max-height: 200px; overflow-y: auto; background: #161c28; border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 8px; padding: 10px; margin-bottom: 16px; display: flex; flex-direction: column; gap: 6px;"></div>
+
+      <div style="display: flex; gap: 10px; justify-content: flex-end;">
+        <button class="btn-outline" onclick="closeModal('modal-confirm-mass-delete')">Cancelar</button>
+        <button class="btn-action-primary" style="background: #ef4444; color: #fff; width: auto; padding: 10px 18px;" onclick="confirmExecuteMassDelete()">
+          Sim, Excluir Atletas Definitivamente
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Modal: Subir de Faixa (Graduação) -->
+  <div id="modal-promote" class="modal-overlay">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal('modal-promote')">&times;</button>
+      <h3 style="margin: 0 0 4px 0; font-size: 1.15rem; font-weight: 800; text-transform: uppercase;">Subir de Faixa 🥋</h3>
+      <p style="font-size: 0.75rem; color: #94a3b8; margin: 0 0 16px 0;">Parabéns pela promoção! O critério configurado definirá sua posição inicial na nova faixa.</p>
+
+      <form id="form-promote" onsubmit="handlePromotion(event)">
+        <div class="form-group">
+          <label class="form-label">Atleta a ser Graduado</label>
+          <div id="promo-athlete-display" style="font-weight: 700; color: #fff; padding: 10px; background: #1a2230; border-radius: 8px;">Nome</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nova Faixa Conquistada</label>
+          <select id="promo-new-belt" class="form-select" required>
+            <option value="Azul">Faixa Azul</option>
+            <option value="Roxa">Faixa Roxa</option>
+            <option value="Marrom">Faixa Marrom</option>
+            <option value="Preta">Faixa Preta</option>
+          </select>
+        </div>
+
+        <div style="background: #18202d; border: 1px solid #2d3748; padding: 12px; border-radius: 8px; margin-bottom: 16px; font-size: 0.75rem; line-height: 1.4;">
+          <div style="font-weight: 800; color: #facc15; margin-bottom: 4px;">REGRA DE ENTRADA APLICADA:</div>
+          <div id="promo-rule-info">Critério atual: Recomeçar do Fim (0 pontos)</div>
+        </div>
+
+        <button type="submit" class="btn-action-primary">Confirmar Graduação 🥋</button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- Modal: Trocar de Atleta Ativo -->
+  <div id="modal-switch-athlete" class="modal-overlay">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal('modal-switch-athlete')">&times;</button>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; text-transform: uppercase;">Trocar de Atleta</h3>
+        <button class="btn-outline" style="font-size: 0.7rem; padding: 4px 8px;" onclick="closeModal('modal-switch-athlete'); openAddAthleteModal();">+ Criar Atleta</button>
+      </div>
+      <p style="font-size: 0.75rem; color: #94a3b8; margin: 0 0 14px 0;">Alterne entre atletas para responder desafios pendentes ou acompanhar o ranking de cada um.</p>
+      <div id="switch-athletes-list" style="max-height: 360px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px;"></div>
+    </div>
+  </div>
+
+
+  <!-- Modal: Adicionar Atleta Amigo Manulmente -->
+  <div id="modal-add-athlete" class="modal-overlay">
+    <div class="modal-content">
+      <button class="modal-close" onclick="closeModal('modal-add-athlete')">&times;</button>
+      <h3 style="margin: 0 0 4px 0; font-size: 1.15rem; font-weight: 800; text-transform: uppercase;">Novo Atleta Parceiro</h3>
+      <p style="font-size: 0.75rem; color: #94a3b8; margin: 0 0 16px 0;">Cadastre um amigo ou companheiro de treino para poder desafiá-lo no app.</p>
+
+      <form id="form-add-athlete" onsubmit="handleAddAthlete(event)">
+        <div class="form-group">
+          <label class="form-label">Nome Completo</label>
+          <input type="text" id="add-input-name" class="form-input" required placeholder="Ex: Felipe Preguiça">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group">
+            <label class="form-label">Apelido</label>
+            <input type="text" id="add-input-nickname" class="form-input" required placeholder="Ex: Mestre">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Avatar</label>
+            <select id="add-input-avatar" class="form-select">
+              <option value="🥋">🥋 Kimono</option>
+              <option value="🦁">🦁 Leão</option>
+              <option value="🐺">🐺 Lobo</option>
+              <option value="⚡">⚡ Raio</option>
+              <option value="🐍">🐍 Sucuri</option>
+              <option value="🦈">🦈 Tubarão</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Academia</label>
+          <input type="text" id="add-input-academy" class="form-input" required placeholder="Ex: Gracie Barra, Nova União...">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div class="form-group">
+            <label class="form-label">Gênero</label>
+            <select id="add-input-gender" class="form-select" required>
+              <option value="Masculino">Masculino</option>
+              <option value="Feminino">Feminino</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Faixa</label>
+            <select id="add-input-belt" class="form-select" required>
+              <option value="Branca">Faixa Branca</option>
+              <option value="Azul">Faixa Azul</option>
+              <option value="Roxa">Faixa Roxa</option>
+              <option value="Marrom">Faixa Marrom</option>
+              <option value="Preta">Faixa Preta</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit" class="btn-action-primary" style="margin-top: 10px;">Adicionar ao App 🥋</button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    // --- ESTADO INICIAL E PERSISTÊNCIA ---
+    const STORAGE_KEY_ATHLETES = 'jiurats_athletes_v1';
+    const STORAGE_KEY_CHALLENGES = 'jiurats_challenges_v1';
+    const STORAGE_KEY_CONFIG = 'jiurats_config_v1';
+    const STORAGE_KEY_ACTIVE_USER = 'jiurats_active_user_v1';
+
+    let athletes = [];
+    let challenges = [];
+    let config = {
+      promotionCriteria: 'reset' // 'reset' | 'proportional'
+    };
+    let activeAthleteId = null;
+    let challengeFilterStatus = 'all';
+    let currentRankingBelt = 'Todas';
+    let activeMatchIdForScore = null;
+    let selectedAthleteIds = new Set();
+    let currentVisibleAthleteIds = [];
+
+    // --- CARREGAMENTO INICIAL ---
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStorage();
+      if (athletes.length === 0) {
+        initDefaultData();
+      }
+      setupFormDates();
+      updateActiveUserUI();
+      renderAllViews();
+    });
+
+    function loadStorage() {
+      try {
+        const savedAthletes = localStorage.getItem(STORAGE_KEY_ATHLETES);
+        const savedChallenges = localStorage.getItem(STORAGE_KEY_CHALLENGES);
+        const savedConfig = localStorage.getItem(STORAGE_KEY_CONFIG);
+        const savedActive = localStorage.getItem(STORAGE_KEY_ACTIVE_USER);
+
+        if (savedAthletes) athletes = JSON.parse(savedAthletes);
+        if (savedChallenges) challenges = JSON.parse(savedChallenges);
+        if (savedConfig) config = JSON.parse(savedConfig);
+        if (savedActive) activeAthleteId = savedActive;
+      } catch (e) {
+        console.error('Erro ao ler localStorage', e);
+      }
+    }
+
+    function saveStorage() {
+      localStorage.setItem(STORAGE_KEY_ATHLETES, JSON.stringify(athletes));
+      localStorage.setItem(STORAGE_KEY_CHALLENGES, JSON.stringify(challenges));
+      localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(config));
+      localStorage.setItem(STORAGE_KEY_ACTIVE_USER, activeAthleteId);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 3000);
+    }
+
+    // --- DADOS DE DEMONSTRAÇÃO COMPLETOS ---
+    function initDefaultData() {
+      athletes = [
+        { id: 'ath-1', name: 'Lucas "Pitbull" Silveira', nickname: 'Pitbull', academy: 'Alliance JJ', gender: 'Masculino', belt: 'Roxa', avatar: '🦁', points: 12, wins: 4, draws: 0, losses: 1, promotions: [{ fromBelt: 'Azul', toBelt: 'Roxa', date: '15/01/2024', criteria: 'Recomeçar do Fim', rankPos: 3 }] },
+        { id: 'ath-2', name: 'Beatriz "Pantera" Mesquita', nickname: 'Pantera', academy: 'Gracie Humaitá', gender: 'Feminino', belt: 'Preta', avatar: '🥋', points: 18, wins: 6, draws: 0, losses: 0, promotions: [] },
+        { id: 'ath-3', name: 'Rodrigo "Tanque" Cavaca', nickname: 'Tanque', academy: 'Checkmat', gender: 'Masculino', belt: 'Preta', avatar: '🦍', points: 15, wins: 5, draws: 0, losses: 1, promotions: [] },
+        { id: 'ath-4', name: 'Camila "Sucuri" Oliveira', nickname: 'Sucuri', academy: 'Atos BJJ', gender: 'Feminino', belt: 'Roxa', avatar: '🐍', points: 9, wins: 3, draws: 0, losses: 1, promotions: [] },
+        { id: 'ath-5', name: 'Gabriel "Tubarão" Arges', nickname: 'Tubarão', academy: 'Gracie Barra', gender: 'Masculino', belt: 'Marrom', avatar: '🦈', points: 13, wins: 4, draws: 1, losses: 0, promotions: [] },
+        { id: 'ath-6', name: 'Mariana "Fênix" Silva', nickname: 'Fênix', academy: 'Nova União', gender: 'Feminino', belt: 'Azul', avatar: '⚡', points: 12, wins: 4, draws: 0, losses: 0, promotions: [] },
+        { id: 'ath-7', name: 'Thiago "Mão de Pedra" Vaz', nickname: 'Mão de Pedra', academy: 'Alliance JJ', gender: 'Masculino', belt: 'Azul', avatar: '🐺', points: 10, wins: 3, draws: 1, losses: 1, promotions: [] },
+        { id: 'ath-8', name: 'Rafael "Massafera" Lima', nickname: 'Massafera', academy: 'B9 JJ', gender: 'Masculino', belt: 'Branca', avatar: '🥋', points: 7, wins: 2, draws: 1, losses: 0, promotions: [] },
+        { id: 'ath-9', name: 'Juliana "Leoa" Nogueira', nickname: 'Leoa', academy: 'Gracie Barra', gender: 'Feminino', belt: 'Branca', avatar: '🦁', points: 6, wins: 2, draws: 0, losses: 1, promotions: [] },
+        { id: 'ath-10', name: 'Felipe "Samurai" Santos', nickname: 'Samurai', academy: 'Dream Art', gender: 'Masculino', belt: 'Marrom', avatar: '🥋', points: 9, wins: 3, draws: 0, losses: 2, promotions: [] },
+        { id: 'ath-11', name: 'Larissa "Veneno" Dias', nickname: 'Veneno', academy: 'Alliance JJ', gender: 'Feminino', belt: 'Azul', avatar: '🐍', points: 7, wins: 2, draws: 1, losses: 1, promotions: [] },
+        { id: 'ath-12', name: 'Enzo "Guilhotina" Ramos', nickname: 'Guilhotina', academy: 'Checkmat', gender: 'Masculino', belt: 'Branca', avatar: '⚡', points: 4, wins: 1, draws: 1, losses: 2, promotions: [] }
+      ];
+
+      activeAthleteId = 'ath-1';
+
+      challenges = [
+        {
+          id: 'chal-1',
+          challengerId: 'ath-1',
+          opponentId: 'ath-4',
+          category: 'Mista',
+          location: 'Dentro da academia',
+          date: '2025-02-10',
+          status: 'completed',
+          winnerId: 'ath-1',
+          notes: 'Treino duro no tatame da Alliance.'
+        },
+        {
+          id: 'chal-2',
+          challengerId: 'ath-7',
+          opponentId: 'ath-6',
+          category: 'Mista',
+          location: 'Campeonato / Torneio',
+          date: '2025-02-14',
+          status: 'completed',
+          winnerId: 'ath-6',
+          notes: 'Final do Open Estadual.'
+        },
+        {
+          id: 'chal-3',
+          challengerId: 'ath-3',
+          opponentId: 'ath-2',
+          category: 'Mista',
+          location: 'Fora (Aberto/Rua)',
+          date: '2025-02-18',
+          status: 'completed',
+          winnerId: 'ath-2',
+          notes: 'Superluta amistosa.'
+        },
+        {
+          id: 'chal-4',
+          challengerId: 'ath-4',
+          opponentId: 'ath-1',
+          category: 'Mista',
+          location: 'Dentro da academia',
+          date: '2025-02-28',
+          status: 'pending',
+          winnerId: null,
+          notes: 'Revanche pedida pela Pantera!'
+        },
+        {
+          id: 'chal-5',
+          challengerId: 'ath-1',
+          opponentId: 'ath-5',
+          category: 'Masculino',
+          location: 'Campeonato / Torneio',
+          date: '2025-03-05',
+          status: 'accepted',
+          winnerId: null,
+          notes: 'Valendo título de peso combinado.'
+        }
+      ];
+
+      saveStorage();
+    }
+
+    function loadDemoData() {
+      if (confirm('Deseja recarregar o banco de dados com 12 atletas e desafios de demonstração?')) {
+        initDefaultData();
+        updateActiveUserUI();
+        renderAllViews();
+        showToast('Dados de demonstração carregados com sucesso!');
+      }
+    }
+
+    function resetAllData() {
+      if (confirm('Atenção: Isso apagará todos os dados salvos localmente. Deseja continuar?')) {
+        localStorage.clear();
+        athletes = [];
+        challenges = [];
+        config = { promotionCriteria: 'reset' };
+        initDefaultData();
+        updateActiveUserUI();
+        renderAllViews();
+        showToast('Banco de dados reiniciado!');
+      }
+    }
+
+    function setupFormDates() {
+      const today = new Date().toISOString().split('T')[0];
+      const dateEl = document.getElementById('challenge-date');
+      if (dateEl) dateEl.value = today;
+    }
+
+    // --- NAVEGAÇÃO ENTRE ABAS ---
+    function navigate(viewName) {
+      document.querySelectorAll('.app-view').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+
+      const targetView = document.getElementById(`view-${viewName}`);
+      if (targetView) targetView.classList.add('active');
+
+      const navIndices = { home: 0, challenges: 1, ranking: 2, profile: 3, settings: 4 };
+      const btn = document.querySelectorAll('.nav-btn')[navIndices[viewName]];
+      if (btn) btn.classList.add('active');
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      renderAllViews();
+    }
+
+    // --- CONTROLE DE MODAIS ---
+    function openModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.add('active');
+    }
+    function closeModal(id) {
+      const m = document.getElementById(id);
+      if (m) m.classList.remove('active');
+    }
+
+    // Fecha ao clicar fora da caixa do modal
+    window.addEventListener('click', (e) => {
+      if (e.target.classList.contains('modal-overlay')) {
+        e.target.classList.remove('active');
+      }
+    });
+
+    // --- RECURSOS DO USUÁRIO ATIVO ---
+    function getActiveAthlete() {
+      return athletes.find(a => a.id === activeAthleteId) || athletes[0];
+    }
+
+    function updateActiveUserUI() {
+      const active = getActiveAthlete();
+      if (!active) return;
+      activeAthleteId = active.id;
+
+      // Header
+      document.getElementById('header-avatar').textContent = active.avatar || '🥋';
+      document.getElementById('header-user-name').textContent = active.nickname || active.name.split(' ')[0];
+      const beltTag = document.getElementById('header-user-belt');
+      beltTag.className = `belt-tag belt-${active.belt}`;
+      beltTag.textContent = active.belt;
+
+      // Home
+      document.getElementById('home-greeting').textContent = `Oss, ${active.nickname || active.name}!`;
+      document.getElementById('home-academy').textContent = `${active.academy} • ${active.gender}`;
+      document.getElementById('home-pts').textContent = active.points || 0;
+      document.getElementById('home-wins').textContent = active.wins || 0;
+      document.getElementById('home-draws').textContent = active.draws || 0;
+      document.getElementById('home-losses').textContent = active.losses || 0;
+
+      // Profile View
+      document.getElementById('profile-avatar-large').textContent = active.avatar || '🥋';
+      document.getElementById('profile-name').textContent = active.name;
+      document.getElementById('profile-nickname').textContent = `"${active.nickname}"`;
+      document.getElementById('profile-academy').textContent = active.academy;
+      const profBeltBadge = document.getElementById('profile-belt-badge');
+      profBeltBadge.className = `belt-tag belt-${active.belt}`;
+      profBeltBadge.textContent = `Faixa ${active.belt}`;
+
+      const totalLutas = (active.wins || 0) + (active.draws || 0) + (active.losses || 0);
+      const winRate = totalLutas > 0 ? Math.round(((active.wins || 0) / totalLutas) * 100) : 0;
+      document.getElementById('stat-total-fights').textContent = totalLutas;
+      document.getElementById('stat-win-rate').textContent = `${winRate}%`;
+      document.getElementById('stat-points').textContent = `${active.points || 0} pts`;
+
+      // Pos geral
+      const sortedAll = [...athletes].sort(sortAthletes);
+      const posGeral = sortedAll.findIndex(a => a.id === active.id) + 1;
+      document.getElementById('stat-rank-pos').textContent = `#${posGeral || 1}`;
+
+      // Histórico de graduações no perfil
+      const promoList = document.getElementById('profile-promotions-list');
+      if (active.promotions && active.promotions.length > 0) {
+        promoList.innerHTML = active.promotions.map(p => `
+          <div style="background:#141b26; border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 4px; margin-bottom: 6px; font-size: 0.75rem;">
+            <div style="font-weight: 700; color: #fff;">Promovido à Faixa ${p.toBelt}</div>
+            <div style="color: #94a3b8; font-size: 0.7rem; margin-top: 2px;">
+              ${p.date} • Entrou na posição #${p.rankPos} via critério <strong>"${p.criteria}"</strong>
+            </div>
+          </div>
+        `).join('');
+      } else {
+        promoList.innerHTML = `<div style="font-size: 0.8rem; color: #64748b; text-align: center; padding: 10px;">Nenhuma graduação registrada ainda.</div>`;
+      }
+
+      // Contador de pendentes
+      const pendingCount = challenges.filter(c => c.opponentId === active.id && c.status === 'pending').length;
+      const navBadge = document.getElementById('nav-pending-badge');
+      if (pendingCount > 0) {
+        navBadge.style.display = 'block';
+        navBadge.textContent = pendingCount;
+      } else {
+        navBadge.style.display = 'none';
+      }
+
+      // Settings radio sync
+      syncSettingsUI();
+      saveStorage();
+    }
+
+    function syncSettingsUI() {
+      const optReset = document.getElementById('crit-opt-reset');
+      const optProp = document.getElementById('crit-opt-proportional');
+      const radioReset = document.getElementById('radio-reset');
+      const radioProp = document.getElementById('radio-proportional');
+
+      if (optReset && optProp && radioReset && radioProp) {
+        if (config.promotionCriteria === 'reset') {
+          optReset.classList.add('selected');
+          optProp.classList.remove('selected');
+          radioReset.checked = true;
+        } else {
+          optProp.classList.add('selected');
+          optReset.classList.remove('selected');
+          radioProp.checked = true;
+        }
+      }
+    }
+
+    function setPromotionCriteria(crit) {
+      config.promotionCriteria = crit;
+      saveStorage();
+      syncSettingsUI();
+      showToast(`Critério de promoção atualizado para: ${crit === 'reset' ? 'Recomeçar do Fim' : 'Posição Proporcional'}`);
+    }
+
+    // --- RENDER GERAL DE VIEWS ---
+    function renderAllViews() {
+      renderHomePending();
+      renderHomeLeaders();
+      renderChallengesFeed();
+      renderRanking();
+    }
+
+    // --- HOME PENDENTES & LÍDERES ---
+    function renderHomePending() {
+      const active = getActiveAthlete();
+      const pendingBox = document.getElementById('home-pending-box');
+      const pendingList = document.getElementById('home-pending-list');
+      const pendingCountEl = document.getElementById('home-pending-count');
+
+      const myPending = challenges.filter(c => c.opponentId === active.id && c.status === 'pending');
+
+      if (myPending.length === 0) {
+        pendingBox.style.display = 'none';
+        return;
+      }
+
+      pendingBox.style.display = 'block';
+      pendingCountEl.textContent = `${myPending.length} pendente${myPending.length > 1 ? 's' : ''}`;
+
+      pendingList.innerHTML = myPending.map(c => {
+        const chal = athletes.find(a => a.id === c.challengerId) || { name: 'Desconhecido', belt: 'Branca' };
+        return `
+          <div class="challenge-card" style="border-color: rgba(239, 68, 68, 0.4); background: #1a1622;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <span style="font-size: 0.75rem; color: #94a3b8;">Desafio de Tatame • ${c.date}</span>
+              <span class="belt-tag belt-${chal.belt}">${chal.belt}</span>
+            </div>
+            <div style="margin: 10px 0; font-weight: 700; font-size: 0.95rem; color: #fff;">
+              ${chal.name} quer lutar com você!
+            </div>
+            <div style="font-size: 0.75rem; color: #94a3b8; margin-bottom: 12px;">
+              Local: ${c.location} • Categoria: ${c.category}
+              ${c.notes ? `<br><em style="color:#cbd5e1;">"${c.notes}"</em>` : ''}
+            </div>
+            <div style="display:flex; gap:8px;">
+              <button class="btn-action-primary" style="padding: 6px 12px; font-size: 0.75rem;" onclick="respondChallenge('${c.id}', true)">Aceitar Desafio 🥋</button>
+              <button class="btn-outline" style="padding: 6px 12px; font-size: 0.75rem; border-color: rgba(239, 68, 68, 0.3); color: #f87171;" onclick="respondChallenge('${c.id}', false)">Recusar</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderHomeLeaders() {
+      const active = getActiveAthlete();
+      const container = document.getElementById('home-belt-leaders');
+      const sameBelt = athletes.filter(a => a.belt === active.belt).sort(sortAthletes).slice(0, 3);
+
+      if (sameBelt.length === 0) {
+        container.innerHTML = '<div style="font-size: 0.8rem; color: #64748b;">Nenhum outro atleta nessa faixa ainda.</div>';
+        return;
+      }
+
+      container.innerHTML = sameBelt.map((a, idx) => `
+        <div class="ranking-item ${a.id === active.id ? 'highlight-me' : ''}">
+          <div class="ranking-pos ${idx === 0 ? 'top-1' : idx === 1 ? 'top-2' : 'top-3'}">#${idx + 1}</div>
+          <div class="user-avatar">${a.avatar || '🥋'}</div>
+          <div style="flex: 1; min-width: 0;">
+            <div style="font-weight: 800; font-size: 0.85rem; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${a.name}</div>
+            <div style="font-size: 0.7rem; color: #94a3b8;">${a.academy}</div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-weight: 900; color: #4ade80; font-size: 0.9rem;">${a.points} pts</div>
+            <div style="font-size: 0.65rem; color: #94a3b8;">${a.wins}V • ${a.draws}E • ${a.losses}D</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // --- ABA DE DESAFIOS & FEED ---
+    function setChallengeFilter(status, btn) {
+      challengeFilterStatus = status;
+      document.querySelectorAll('#view-challenges .pill-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderChallengesFeed();
+    }
+
+    function renderChallengesFeed() {
+      const container = document.getElementById('challenges-feed');
+      const active = getActiveAthlete();
+
+      let list = [...challenges];
+      if (challengeFilterStatus === 'pending') {
+        list = list.filter(c => c.status === 'pending');
+      } else if (challengeFilterStatus === 'accepted') {
+        list = list.filter(c => c.status === 'accepted');
+      } else if (challengeFilterStatus === 'completed') {
+        list = list.filter(c => c.status === 'completed');
+      }
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="action-card" style="text-align: center; padding: 40px 20px;">
+            <div style="font-size: 2.2rem; margin-bottom: 8px;">🥋</div>
+            <div style="font-weight: 800; font-size: 0.95rem; text-transform: uppercase;">Nenhum desafio encontrado</div>
+            <div style="font-size: 0.75rem; color: #94a3b8; margin: 6px 0 16px;">Lance um desafio agora mesmo contra qualquer atleta de qualquer academia!</div>
+            <button class="btn-action-primary" style="width: auto; margin: 0 auto;" onclick="openNewChallengeModal()">Desafiar Alguém</button>
+          </div>
+        `;
+        return;
+      }
+
+      // Ordenar por data recente
+      list.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      container.innerHTML = list.map(c => {
+        const chal = athletes.find(a => a.id === c.challengerId) || { id: c.challengerId, name: 'Atleta', belt: 'Branca', avatar: '🥋' };
+        const opp = athletes.find(a => a.id === c.opponentId) || { id: c.opponentId, name: 'Atleta', belt: 'Branca', avatar: '🥋' };
+
+        const isMeInvolved = (active.id === chal.id || active.id === opp.id);
+        const amIOpponent = active.id === opp.id;
+
+        let statusBadge = '';
+        if (c.status === 'pending') {
+          statusBadge = '<span class="stat-badge stat-badge-loss">Pendente</span>';
+        } else if (c.status === 'accepted') {
+          statusBadge = '<span class="stat-badge stat-badge-draw">Em Andamento</span>';
+        } else if (c.status === 'completed') {
+          statusBadge = '<span class="stat-badge stat-badge-win">Concluído</span>';
+        }
+
+        let winnerText = '';
+        if (c.status === 'completed') {
+          if (c.winnerId === 'draw') {
+            winnerText = '<div style="margin-top: 8px; font-size: 0.75rem; font-weight: 800; color: #facc15; text-align: center;">🤝 Empate Técnico (+1 pt cada)</div>';
+          } else {
+            const winObj = athletes.find(a => a.id === c.winnerId);
+            winnerText = `<div style="margin-top: 8px; font-size: 0.75rem; font-weight: 800; color: #4ade80; text-align: center;">🏆 Vitória de ${winObj ? winObj.name : 'Atleta'} (+3 pts)</div>`;
+          }
+        }
+
+        let actionButtons = '';
+        if (c.status === 'pending') {
+          if (amIOpponent) {
+            actionButtons = `
+              <div style="display:flex; gap:8px; margin-top: 10px;">
+                <button class="btn-action-primary" style="padding: 6px 10px; font-size: 0.72rem;" onclick="respondChallenge('${c.id}', true)">Aceitar Desafio</button>
+                <button class="btn-outline" style="padding: 6px 10px; font-size: 0.72rem; color:#f87171;" onclick="respondChallenge('${c.id}', false)">Recusar</button>
+              </div>
+            `;
+          } else {
+            actionButtons = `
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 10px;">
+                <span style="font-size: 0.7rem; color: #94a3b8;">Aguardando resposta de ${opp.name}</span>
+                <button class="btn-outline" style="font-size: 0.68rem; padding: 4px 8px;" onclick="simulateAccept('${c.id}')">Simular Aceite ⚡</button>
+              </div>
+            `;
+          }
+        } else if (c.status === 'accepted') {
+          actionButtons = `
+            <div style="margin-top: 10px; display: flex; justify-content: flex-end; gap: 8px;">
+              <button class="btn-action-primary" style="width: auto; padding: 6px 14px; font-size: 0.72rem;" onclick="openScoreModal('${c.id}')">
+                Registrar Resultado 🏆
+              </button>
+            </div>
+          `;
+        }
+
+        return `
+          <div class="challenge-card" style="${isMeInvolved ? 'border-color: rgba(34, 197, 94, 0.35);' : ''}">
+            <div class="challenge-header">
+              <span>📅 ${c.date} • 📍 ${c.location}</span>
+              ${statusBadge}
+            </div>
+
+            <div class="challenge-fighters">
+              <!-- Desafiante -->
+              <div class="fighter-box">
+                <div class="user-avatar">${chal.avatar}</div>
+                <div style="overflow:hidden; flex:1;">
+                  <div style="display:flex; align-items:center; gap:4px;">
+                    <span style="font-weight: 800; font-size: 0.85rem; color: #fff; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${chal.name}</span>
+                    <button class="btn-icon" style="width:22px; height:22px; font-size:0.65rem;" title="Editar ${chal.name}" onclick="openEditAthleteModal('${chal.id}')">✏️</button>
+                  </div>
+                  <div class="belt-tag belt-${chal.belt}" style="font-size: 0.55rem; padding: 1px 4px;">${chal.belt}</div>
+                </div>
+              </div>
+
+              <div class="vs-pill">VS</div>
+
+              <!-- Desafiado -->
+              <div class="fighter-box" style="text-align: right; justify-content: flex-end;">
+                <div style="overflow:hidden; flex:1;">
+                  <div style="display:flex; align-items:center; justify-content:flex-end; gap:4px;">
+                    <button class="btn-icon" style="width:22px; height:22px; font-size:0.65rem;" title="Editar ${opp.name}" onclick="openEditAthleteModal('${opp.id}')">✏️</button>
+                    <span style="font-weight: 800; font-size: 0.85rem; color: #fff; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${opp.name}</span>
+                  </div>
+                  <div class="belt-tag belt-${opp.belt}" style="font-size: 0.55rem; padding: 1px 4px;">${opp.belt}</div>
+                </div>
+                <div class="user-avatar">${opp.avatar}</div>
+              </div>
+            </div>
+
+            <div style="font-size: 0.72rem; color: #94a3b8; display:flex; justify-content:space-between; margin-top: 4px;">
+              <span>Categoria: <strong>${c.category}</strong></span>
+              ${c.notes ? `<span style="font-style:italic;">"${c.notes}"</span>` : ''}
+            </div>
+
+            ${winnerText}
+            ${actionButtons}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function respondChallenge(challengeId, accepted) {
+      const chal = challenges.find(c => c.id === challengeId);
+      if (!chal) return;
+
+      if (accepted) {
+        chal.status = 'accepted';
+        showToast('Desafio Aceito! O combate agora está em andamento.');
+      } else {
+        challenges = challenges.filter(c => c.id !== challengeId);
+        showToast('Desafio recusado e removido.');
+      }
+
+      saveStorage();
+      updateActiveUserUI();
+      renderAllViews();
+    }
+
+    function simulateAccept(challengeId) {
+      respondChallenge(challengeId, true);
+    }
+
+    // --- REGISTRO DE RESULTADOS ---
+    function openScoreModal(challengeId) {
+      const chal = challenges.find(c => c.id === challengeId);
+      if (!chal) return;
+      activeMatchIdForScore = challengeId;
+
+      const p1 = athletes.find(a => a.id === chal.challengerId);
+      const p2 = athletes.find(a => a.id === chal.opponentId);
+
+      document.getElementById('result-match-info').innerHTML = `
+        <span style="color:#4ade80;">${p1.name}</span> <span style="color:#94a3b8;">vs</span> <span style="color:#60a5fa;">${p2.name}</span>
+        <div style="font-size: 0.75rem; color: #94a3b8; font-weight: normal; margin-top: 4px;">Local: ${chal.location}</div>
+      `;
+
+      document.getElementById('res-name-p1').textContent = p1.name;
+      document.getElementById('res-name-p2').textContent = p2.name;
+
+      openModal('modal-result');
+    }
+
+    function submitResult(outcome) {
+      const chal = challenges.find(c => c.id === activeMatchIdForScore);
+      if (!chal) return;
+
+      const p1 = athletes.find(a => a.id === chal.challengerId);
+      const p2 = athletes.find(a => a.id === chal.opponentId);
+
+      if (outcome === 'challenger') {
+        chal.winnerId = p1.id;
+        p1.points = (p1.points || 0) + 3;
+        p1.wins = (p1.wins || 0) + 1;
+        p2.losses = (p2.losses || 0) + 1;
+        showToast(`Vitória confirmada para ${p1.name}! (+3 pts)`);
+      } else if (outcome === 'opponent') {
+        chal.winnerId = p2.id;
+        p2.points = (p2.points || 0) + 3;
+        p2.wins = (p2.wins || 0) + 1;
+        p1.losses = (p1.losses || 0) + 1;
+        showToast(`Vitória confirmada para ${p2.name}! (+3 pts)`);
+      } else if (outcome === 'draw') {
+        chal.winnerId = 'draw';
+        p1.points = (p1.points || 0) + 1;
+        p1.draws = (p1.draws || 0) + 1;
+        p2.points = (p2.points || 0) + 1;
+        p2.draws = (p2.draws || 0) + 1;
+        showToast(`Empate registrado! (+1 pt para ambos)`);
+      }
+
+      chal.status = 'completed';
+
+      closeModal('modal-result');
+      saveStorage();
+      updateActiveUserUI();
+      renderAllViews();
+    }
+
+    // --- CRITÉRIOS DE DESEMPATE DO RANKING ---
+    // Pontos (desc), Vitórias (desc), Menos derrotas (asc), Ordem alfabética
+    function sortAthletes(a, b) {
+      const ptsA = a.points || 0;
+      const ptsB = b.points || 0;
+      if (ptsB !== ptsA) return ptsB - ptsA;
+
+      const winsA = a.wins || 0;
+      const winsB = b.wins || 0;
+      if (winsB !== winsA) return winsB - winsA;
+
+      const lossesA = a.losses || 0;
+      const lossesB = b.losses || 0;
+      if (lossesA !== lossesB) return lossesA - lossesB;
+
+      return a.name.localeCompare(b.name);
+    }
+
+    // --- RANKING NACIONAL ---
+    function setRankingBelt(belt, btn) {
+      currentRankingBelt = belt;
+      document.querySelectorAll('#ranking-belt-pills .pill-btn').forEach(b => b.classList.remove('active'));
+      if (btn) btn.classList.add('active');
+      renderRanking();
+    }
+
+    function updateAcademyFilterOptions() {
+      const select = document.getElementById('ranking-academy-filter');
+      const currentVal = select.value || 'Todas';
+      const academies = Array.from(new Set(athletes.map(a => a.academy).filter(Boolean))).sort();
+
+      select.innerHTML = '<option value="Todas">Todas as Academias</option>' +
+        academies.map(ac => `<option value="${ac}" ${ac === currentVal ? 'selected' : ''}>${ac}</option>`).join('');
+    }
+
+    function renderRanking() {
+      updateAcademyFilterOptions();
+
+      const genderFilter = document.getElementById('ranking-gender-filter').value;
+      const academyFilter = document.getElementById('ranking-academy-filter').value;
+      const active = getActiveAthlete();
+
+      let filtered = [...athletes];
+
+      // Filtro Faixa
+      if (currentRankingBelt !== 'Todas') {
+        filtered = filtered.filter(a => a.belt === currentRankingBelt);
+      }
+
+      // Filtro Categoria
+      if (genderFilter !== 'Mista') {
+        filtered = filtered.filter(a => a.gender === genderFilter);
+      }
+
+      // Filtro Academia
+      if (academyFilter !== 'Todas') {
+        filtered = filtered.filter(a => a.academy === academyFilter);
+      }
+
+      filtered.sort(sortAthletes);
+      currentVisibleAthleteIds = filtered.map(a => a.id);
+
+      const podiumContainer = document.getElementById('ranking-podium');
+      const listContainer = document.getElementById('ranking-list');
+      const countEl = document.getElementById('visible-athletes-count');
+      if (countEl) countEl.textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        podiumContainer.innerHTML = '';
+        listContainer.innerHTML = `
+          <div class="action-card" style="text-align: center; padding: 30px 10px;">
+            <div style="font-size: 2rem; margin-bottom: 8px;">🥋</div>
+            <div style="font-weight: 800; font-size: 0.95rem;">Nenhum atleta encontrado</div>
+            <div style="font-size: 0.75rem; color: #94a3b8; margin-top: 4px;">Alterne a faixa ou adicione mais companheiros de tatame.</div>
+          </div>
+        `;
+        updateMassBar();
+        return;
+      }
+
+      // Podium Top 3 (Se tiver pelo menos 2 atletas)
+      if (filtered.length >= 2) {
+        const top1 = filtered[0];
+        const top2 = filtered[1];
+        const top3 = filtered[2] || null;
+
+        podiumContainer.style.display = 'grid';
+        podiumContainer.innerHTML = `
+          <!-- 2º Lugar -->
+          <div class="podium-card podium-2">
+            <div style="font-size: 1.4rem;">🥈</div>
+            <div class="user-avatar" style="margin: 4px auto;">${top2.avatar}</div>
+            <div style="font-weight: 800; font-size: 0.75rem; color: #fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${top2.nickname || top2.name}</div>
+            <div class="belt-tag belt-${top2.belt}" style="font-size: 0.55rem; padding: 1px 4px; margin-top: 2px;">${top2.belt}</div>
+            <div style="font-weight: 900; color: #cbd5e1; font-size: 0.85rem; margin-top: 4px;">${top2.points} pts</div>
+          </div>
+
+          <!-- 1º Lugar -->
+          <div class="podium-card podium-1">
+            <div style="font-size: 1.8rem; filter: drop-shadow(0 0 8px rgba(250, 204, 21, 0.5));">🥇</div>
+            <div class="user-avatar" style="margin: 4px auto; width: 34px; height: 34px; font-size: 16px;">${top1.avatar}</div>
+            <div style="font-weight: 900; font-size: 0.82rem; color: #facc15; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${top1.nickname || top1.name}</div>
+            <div class="belt-tag belt-${top1.belt}" style="font-size: 0.55rem; padding: 1px 4px; margin-top: 2px;">${top1.belt}</div>
+            <div style="font-weight: 900; color: #facc15; font-size: 1rem; margin-top: 4px;">${top1.points} pts</div>
+          </div>
+
+          <!-- 3º Lugar -->
+          <div class="podium-card podium-3">
+            <div style="font-size: 1.4rem;">🥉</div>
+            ${top3 ? `
+              <div class="user-avatar" style="margin: 4px auto;">${top3.avatar}</div>
+              <div style="font-weight: 800; font-size: 0.75rem; color: #fff; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${top3.nickname || top3.name}</div>
+              <div class="belt-tag belt-${top3.belt}" style="font-size: 0.55rem; padding: 1px 4px; margin-top: 2px;">${top3.belt}</div>
+              <div style="font-weight: 900; color: #d97706; font-size: 0.85rem; margin-top: 4px;">${top3.points} pts</div>
+            ` : `<div style="font-size: 0.7rem; color: #64748b; margin-top: 20px;">Vazio</div>`}
+          </div>
+        `;
+      } else {
+        podiumContainer.style.display = 'none';
+      }
+
+      // Lista Completa do Ranking
+      listContainer.innerHTML = filtered.map((a, idx) => {
+        const isMe = a.id === active.id;
+        const isSelected = selectedAthleteIds.has(a.id);
+        const pos = idx + 1;
+        let posClass = '';
+        if (pos === 1) posClass = 'top-1';
+        else if (pos === 2) posClass = 'top-2';
+        else if (pos === 3) posClass = 'top-3';
+
+        return `
+          <div class="ranking-item ${isMe ? 'highlight-me' : ''}" style="${isSelected ? 'border-color: #3b82f6; background: #132238;' : ''}">
+            <input type="checkbox" class="athlete-checkbox" ${isSelected ? 'checked' : ''} onchange="toggleAthleteSelect('${a.id}', this.checked)" title="Selecionar para exclusão em massa">
+            <div class="ranking-pos ${posClass}">#${pos}</div>
+            <div class="user-avatar">${a.avatar || '🥋'}</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="display:flex; align-items:center; gap: 6px;">
+                <span style="font-weight: 800; font-size: 0.85rem; color: #fff; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${a.name}</span>
+                ${isMe ? '<span style="background:var(--accent); color:#000; font-size:9px; font-weight:800; padding:1px 4px; border-radius:4px;">VOCÊ</span>' : ''}
+              </div>
+              <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 2px;">
+                ${a.academy} • <span class="belt-tag belt-${a.belt}" style="font-size:0.55rem; padding: 1px 4px;">${a.belt}</span>
+              </div>
+            </div>
+            <div style="text-align: right; margin-right: 4px;">
+              <div style="font-weight: 900; color: #4ade80; font-size: 0.95rem;">${a.points || 0} pts</div>
+              <div style="font-size: 0.65rem; color: #94a3b8;">${a.wins || 0}V • ${a.draws || 0}E • ${a.losses || 0}D</div>
+            </div>
+            <div style="display:flex; gap:4px; align-items:center;">
+              <button class="btn-icon" title="Editar Atleta" onclick="openEditAthleteModal('${a.id}')">✏️</button>
+              <button class="btn-icon btn-icon-danger" title="Excluir Atleta" onclick="deleteSingleAthlete('${a.id}')">🗑️</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      updateMassBar();
+    }
+
+    // --- LANÇAR NOVO DESAFIO ---
+    function openNewChallengeModal() {
+      const active = getActiveAthlete();
+      const oppSelect = document.getElementById('challenge-opponent');
+      const otherAthletes = athletes.filter(a => a.id !== active.id);
+
+      if (otherAthletes.length === 0) {
+        showToast('Adicione pelo menos outro atleta para poder desafiar!');
+        openAddAthleteModal();
+        return;
+      }
+
+      oppSelect.innerHTML = otherAthletes.map(a => `
+        <option value="${a.id}">${a.name} (${a.belt} • ${a.academy})</option>
+      `).join('');
+
+      openModal('modal-challenge');
+    }
+
+    function handleCreateChallenge(e) {
+      e.preventDefault();
+      const active = getActiveAthlete();
+      const oppId = document.getElementById('challenge-opponent').value;
+      const cat = document.getElementById('challenge-category').value;
+      const loc = document.getElementById('challenge-location').value;
+      const date = document.getElementById('challenge-date').value;
+      const notes = document.getElementById('challenge-notes').value;
+
+      const newChallenge = {
+        id: 'chal-' + Date.now(),
+        challengerId: active.id,
+        opponentId: oppId,
+        category: cat,
+        location: loc,
+        date: date,
+        status: 'pending',
+        winnerId: null,
+        notes: notes
+      };
+
+      challenges.unshift(newChallenge);
+      saveStorage();
+      closeModal('modal-challenge');
+      showToast('Desafio lançado! O oponente foi notificado.');
+      updateActiveUserUI();
+      renderAllViews();
+      navigate('challenges');
+    }
+
+    // --- REQUISITO CENTRAL: SISTEMA DE PROMOÇÃO / TROCA DE FAIXA ---
+    function openPromoteModal() {
+      const active = getActiveAthlete();
+      document.getElementById('promo-athlete-display').textContent = `${active.name} (Atual: Faixa ${active.belt})`;
+
+      const beltOrder = ['Branca', 'Azul', 'Roxa', 'Marrom', 'Preta'];
+      const currentIdx = beltOrder.indexOf(active.belt);
+      const nextBelts = beltOrder.slice(currentIdx + 1);
+
+      const newBeltSelect = document.getElementById('promo-new-belt');
+      if (nextBelts.length === 0) {
+        showToast('Este atleta já atingiu a Faixa Preta máxima!');
+        return;
+      }
+
+      newBeltSelect.innerHTML = nextBelts.map(b => `<option value="${b}">Faixa ${b}</option>`).join('');
+
+      const ruleInfo = document.getElementById('promo-rule-info');
+      if (config.promotionCriteria === 'reset') {
+        ruleInfo.innerHTML = `<strong>Regra Padrão: Recomeçar do Fim</strong><br>O atleta entrará no final do ranking da nova faixa com <strong>0 pontos</strong>.`;
+      } else {
+        ruleInfo.innerHTML = `<strong>Regra Padrão: Posição Proporcional</strong><br>O percentual relativo será mantido na nova faixa e herdará <strong>50% dos pontos</strong> acumulados.`;
+      }
+
+      openModal('modal-promote');
+    }
+
+    function handlePromotion(e) {
+      e.preventDefault();
+      const active = getActiveAthlete();
+      const newBelt = document.getElementById('promo-new-belt').value;
+      const oldBelt = active.belt;
+      const todayStr = new Date().toLocaleDateString('pt-BR');
+
+      // 1. Calcular percentual e posição na faixa antiga
+      const athletesOldBelt = athletes.filter(a => a.belt === oldBelt).sort(sortAthletes);
+      const oldRankPos = athletesOldBelt.findIndex(a => a.id === active.id) + 1;
+      const totalInOldBelt = Math.max(athletesOldBelt.length, 1);
+      const percentile = oldRankPos / totalInOldBelt; // ex: 0.2 = top 20%
+
+      // 2. Aplicar critério configurado
+      let assignedPoints = 0;
+      let criteriaName = '';
+      let targetRankPos = 1;
+
+      if (config.promotionCriteria === 'reset') {
+        // Opção A: Recomeçar do Fim com 0 pontos
+        assignedPoints = 0;
+        criteriaName = 'Recomeçar do Fim (0 pts)';
+
+        // Entra no final do ranking da nova faixa
+        const athletesNewBelt = athletes.filter(a => a.belt === newBelt && a.id !== active.id).sort(sortAthletes);
+        targetRankPos = athletesNewBelt.length + 1;
+      } else {
+        // Opção B: Posição Proporcional com 50% dos pontos
+        criteriaName = 'Posição Proporcional (50% pts)';
+        assignedPoints = Math.round((active.points || 0) * 0.5);
+
+        const athletesNewBelt = athletes.filter(a => a.belt === newBelt && a.id !== active.id).sort(sortAthletes);
+        const targetCount = athletesNewBelt.length;
+
+        if (targetCount === 0) {
+          targetRankPos = 1;
+        } else {
+          // Posição baseada no percentual anterior
+          targetRankPos = Math.max(1, Math.min(Math.round(percentile * targetCount) + 1, targetCount + 1));
+        }
+      }
+
+      // Atualizar atleta
+      active.belt = newBelt;
+      active.points = assignedPoints;
+
+      // Registrar no histórico oficial de graduações
+      if (!active.promotions) active.promotions = [];
+      const logEntry = {
+        fromBelt: oldBelt,
+        toBelt: newBelt,
+        date: todayStr,
+        criteria: criteriaName,
+        rankPos: targetRankPos,
+        pointsAwarded: assignedPoints
+      };
+      active.promotions.unshift(logEntry);
+
+      saveStorage();
+      closeModal('modal-promote');
+
+      showToast(`🏆 ${active.nickname || active.name} subiu para Faixa ${newBelt}! (Posição #${targetRankPos})`);
+      updateActiveUserUI();
+      renderAllViews();
+    }
+
+    // --- EDIÇÃO DE DADOS DE ATLETA (QUALQUER ATLETA OU PERFIL) ---
+    function openEditProfileModal() {
+      openEditAthleteModal(activeAthleteId);
+    }
+
+    function openEditAthleteModal(athleteId) {
+      const target = athletes.find(a => a.id === athleteId);
+      if (!target) return;
+
+      document.getElementById('edit-athlete-target-id').value = target.id;
+      document.getElementById('edit-modal-title').textContent = `Editar Atleta — ${target.name}`;
+      document.getElementById('prof-input-name').value = target.name;
+      document.getElementById('prof-input-nickname').value = target.nickname || '';
+      document.getElementById('prof-input-academy').value = target.academy;
+      document.getElementById('prof-input-avatar').value = target.avatar || '🥋';
+      document.getElementById('prof-input-gender').value = target.gender || 'Masculino';
+      document.getElementById('prof-input-belt').value = target.belt;
+
+      const notice = document.getElementById('belt-change-notice');
+      notice.style.display = 'none';
+      const critNameEl = document.getElementById('notice-criterion-name');
+      if (critNameEl) {
+        critNameEl.textContent = config.promotionCriteria === 'reset' ? 'Recomeçar do Fim (0 pontos)' : 'Posição Proporcional (herda 50% dos pontos)';
+      }
+
+      // Alerta dinâmico se usuário mudar faixa no select
+      const beltSelect = document.getElementById('prof-input-belt');
+      beltSelect.onchange = () => {
+        if (beltSelect.value !== target.belt) {
+          notice.style.display = 'block';
+        } else {
+          notice.style.display = 'none';
+        }
+      };
+
+      openModal('modal-profile');
+    }
+
+    function handleSaveAthleteEdit(e) {
+      e.preventDefault();
+      const targetId = document.getElementById('edit-athlete-target-id').value;
+      const target = athletes.find(a => a.id === targetId);
+      if (!target) return;
+
+      const newBelt = document.getElementById('prof-input-belt').value;
+      const beltChanged = target.belt !== newBelt;
+      const oldBelt = target.belt;
+
+      target.name = document.getElementById('prof-input-name').value.trim();
+      target.nickname = document.getElementById('prof-input-nickname').value.trim();
+      target.academy = document.getElementById('prof-input-academy').value.trim();
+      target.avatar = document.getElementById('prof-input-avatar').value;
+      target.gender = document.getElementById('prof-input-gender').value;
+
+      let toastMsg = `Atleta "${target.name}" atualizado com sucesso!`;
+
+      if (beltChanged) {
+        const todayStr = new Date().toLocaleDateString('pt-BR');
+        let criteriaName = '';
+        let targetRankPos = 1;
+        let assignedPoints = 0;
+
+        // Calcula posição na faixa antiga para percentil
+        const athletesOldBelt = athletes.filter(a => a.belt === oldBelt).sort(sortAthletes);
+        const oldRankPos = athletesOldBelt.findIndex(a => a.id === target.id) + 1;
+        const totalInOldBelt = Math.max(athletesOldBelt.length, 1);
+        const percentile = oldRankPos / totalInOldBelt;
+
+        if (config.promotionCriteria === 'reset') {
+          assignedPoints = 0;
+          criteriaName = 'Recomeçar do Fim (0 pts)';
+          const athletesNewBelt = athletes.filter(a => a.belt === newBelt && a.id !== target.id).sort(sortAthletes);
+          targetRankPos = athletesNewBelt.length + 1;
+        } else {
+          criteriaName = 'Posição Proporcional (50% pts)';
+          assignedPoints = Math.round((target.points || 0) * 0.5);
+          const athletesNewBelt = athletes.filter(a => a.belt === newBelt && a.id !== target.id).sort(sortAthletes);
+          const targetCount = athletesNewBelt.length;
+          targetRankPos = targetCount === 0 ? 1 : Math.max(1, Math.min(Math.round(percentile * targetCount) + 1, targetCount + 1));
+        }
+
+        target.belt = newBelt;
+        target.points = assignedPoints;
+
+        if (!target.promotions) target.promotions = [];
+        target.promotions.unshift({
+          fromBelt: oldBelt,
+          toBelt: newBelt,
+          date: todayStr,
+          criteria: criteriaName,
+          rankPos: targetRankPos,
+          pointsAwarded: assignedPoints
+        });
+
+        toastMsg = `Faixa de "${target.name}" alterada para ${newBelt}! Critério "${criteriaName}" aplicado.`;
+      }
+
+      saveStorage();
+      closeModal('modal-profile');
+      showToast(toastMsg);
+      updateActiveUserUI();
+      renderAllViews();
+    }
+
+    // --- SELEÇÃO E EXCLUSÃO EM MASSA ---
+    function toggleAthleteSelect(athleteId, isChecked) {
+      if (isChecked) {
+        selectedAthleteIds.add(athleteId);
+      } else {
+        selectedAthleteIds.delete(athleteId);
+      }
+      updateMassBar();
+    }
+
+    function toggleSelectAllVisible(isChecked) {
+      currentVisibleAthleteIds.forEach(id => {
+        if (isChecked) {
+          selectedAthleteIds.add(id);
+        } else {
+          selectedAthleteIds.delete(id);
+        }
+      });
+      renderRanking();
+      updateMassBar();
+    }
+
+    function clearSelection() {
+      selectedAthleteIds.clear();
+      const checkAll = document.getElementById('select-all-ranking');
+      if (checkAll) checkAll.checked = false;
+      renderRanking();
+      updateMassBar();
+    }
+
+    function updateMassBar() {
+      const bar = document.getElementById('mass-action-bar');
+      const countLabel = document.getElementById('mass-count-label');
+      const summaryBadge = document.getElementById('selected-summary-badge');
+      const checkAll = document.getElementById('select-all-ranking');
+      const count = selectedAthleteIds.size;
+
+      if (countLabel) countLabel.textContent = `${count} atleta${count > 1 ? 's' : ''} selecionado${count > 1 ? 's' : ''}`;
+      if (summaryBadge) summaryBadge.textContent = `${count} marcado${count > 1 ? 's' : ''}`;
+
+      if (checkAll && currentVisibleAthleteIds.length > 0) {
+        const allSelected = currentVisibleAthleteIds.every(id => selectedAthleteIds.has(id));
+        checkAll.checked = allSelected;
+      }
+
+      if (count > 0) {
+        bar.classList.add('visible');
+      } else {
+        bar.classList.remove('visible');
+      }
+    }
+
+    function openMassDeleteConfirmModal() {
+      if (selectedAthleteIds.size === 0) return;
+
+      const listContainer = document.getElementById('mass-delete-names-list');
+      const athletesToDelete = athletes.filter(a => selectedAthleteIds.has(a.id));
+
+      listContainer.innerHTML = athletesToDelete.map(a => `
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.8rem; color:#fff; border-bottom:1px solid rgba(255,255,255,0.05); padding-bottom:4px;">
+          <span>${a.avatar || '🥋'} <strong>${a.name}</strong> (${a.academy})</span>
+          <span class="belt-tag belt-${a.belt}" style="font-size:0.55rem;">${a.belt}</span>
+        </div>
+      `).join('');
+
+      openModal('modal-confirm-mass-delete');
+    }
+
+    function confirmExecuteMassDelete() {
+      const idsToDelete = Array.from(selectedAthleteIds);
+      if (idsToDelete.length === 0) return;
+
+      // 1. Remover desafios que envolvem os atletas excluídos
+      challenges = challenges.filter(c => !idsToDelete.includes(c.challengerId) && !idsToDelete.includes(c.opponentId));
+
+      // 2. Remover atletas
+      athletes = athletes.filter(a => !idsToDelete.includes(a.id));
+
+      // 3. Se o atleta ativo foi excluído, definir novo atleta ativo
+      if (idsToDelete.includes(activeAthleteId)) {
+        activeAthleteId = athletes.length > 0 ? athletes[0].id : null;
+      }
+
+      // Se todos foram excluídos, manter lista limpa ou pronta para adicionar
+      selectedAthleteIds.clear();
+      closeModal('modal-confirm-mass-delete');
+      saveStorage();
+
+      updateActiveUserUI();
+      renderAllViews();
+      showToast(`${idsToDelete.length} atleta(s) excluído(s) com sucesso!`);
+    }
+
+    function deleteSingleAthlete(athleteId) {
+      const athlete = athletes.find(a => a.id === athleteId);
+      if (!athlete) return;
+
+      const confirmed = confirm(`Tem certeza que deseja excluir o atleta "${athlete.name}"? Todos os seus desafios também serão removidos.`);
+      if (!confirmed) return;
+
+      challenges = challenges.filter(c => c.challengerId !== athleteId && c.opponentId !== athleteId);
+      athletes = athletes.filter(a => a.id !== athleteId);
+      selectedAthleteIds.delete(athleteId);
+
+      if (activeAthleteId === athleteId) {
+        activeAthleteId = athletes.length > 0 ? athletes[0].id : null;
+      }
+
+      saveStorage();
+      updateActiveUserUI();
+      renderAllViews();
+      showToast(`Atleta "${athlete.name}" foi excluído.`);
+    }
+
+    // --- ADICIONAR ATLETA AMIGO / PARCEIRO MANUALMENTE ---
+    function openAddAthleteModal() {
+      openModal('modal-add-athlete');
+    }
+
+    function handleAddAthlete(e) {
+      e.preventDefault();
+      const newAth = {
+        id: 'ath-' + Date.now(),
+        name: document.getElementById('add-input-name').value,
+        nickname: document.getElementById('add-input-nickname').value,
+        avatar: document.getElementById('add-input-avatar').value,
+        academy: document.getElementById('add-input-academy').value,
+        gender: document.getElementById('add-input-gender').value,
+        belt: document.getElementById('add-input-belt').value,
+        points: 0,
+        wins: 0,
+        draws: 0,
+        losses: 0,
+        promotions: []
+      };
+
+      athletes.push(newAth);
+      saveStorage();
+      closeModal('modal-add-athlete');
+      document.getElementById('form-add-athlete').reset();
+      showToast(`Atleta ${newAth.name} adicionado ao aplicativo!`);
+      renderAllViews();
+    }
+
+    // --- TROCA DE ATLETA ATIVO (SIMULAÇÃO MULTIUSUÁRIO) ---
+    function openAthleteSwitcher() {
+      const container = document.getElementById('switch-athletes-list');
+      const active = getActiveAthlete();
+
+      container.innerHTML = athletes.map(a => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding: 10px; background: #161e2c; border-radius: 8px; border: 1px solid ${a.id === active.id ? 'var(--accent)' : 'var(--border-subtle)'};">
+          <div style="display:flex; align-items:center; gap: 10px; cursor:pointer; flex: 1;" onclick="selectAthlete('${a.id}')">
+            <div class="user-avatar">${a.avatar || '🥋'}</div>
+            <div>
+              <div style="font-weight: 800; font-size: 0.85rem; color: #fff;">${a.name}</div>
+              <div style="font-size: 0.7rem; color: #94a3b8;">${a.academy} • <span class="belt-tag belt-${a.belt}" style="font-size: 0.55rem; padding: 1px 4px;">${a.belt}</span></div>
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div style="text-align: right; margin-right: 4px;">
+              <div style="font-weight: 900; color: #4ade80; font-size: 0.85rem;">${a.points || 0} pts</div>
+              ${a.id === active.id ? '<span style="font-size: 0.65rem; color: var(--accent); font-weight: 800;">ATIVO</span>' : ''}
+            </div>
+            <button class="btn-icon" title="Editar" onclick="closeModal('modal-switch-athlete'); openEditAthleteModal('${a.id}')">✏️</button>
+            <button class="btn-icon btn-icon-danger" title="Excluir" onclick="closeModal('modal-switch-athlete'); deleteSingleAthlete('${a.id}')">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+
+      openModal('modal-switch-athlete');
+    }
+
+    function selectAthlete(id) {
+      activeAthleteId = id;
+      closeModal('modal-switch-athlete');
+      updateActiveUserUI();
+      renderAllViews();
+      showToast(`Atleta ativo alternado!`);
+    }
+  </script>
+<script>
+/* Skip artifact shell — fixed helpers served beside every artifact. */
+(function () {
+  "use strict";
+
+  var fmt = {
+    num: function (v, opts) { return new Intl.NumberFormat("pt-BR", opts || {}).format(v); },
+    brl: function (v) { return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(v); },
+    pct: function (v) { return new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 1 }).format(v); }
+  };
+
+  // axisFmt keeps axis tick labels short (compact notation) so long values
+  // (e.g. full BRL amounts) never clip against the plot edge.
+  function axisFmt(v) {
+    return fmt.num(v, { notation: "compact", maximumFractionDigits: 1 });
+  }
+
+  // format accepts a function OR one of the fmt names ("num" | "brl" | "pct").
+  function coerceFormat(spec) {
+    if (typeof spec === "function") return spec;
+    if (typeof spec === "string" && fmt[spec]) return fmt[spec];
+    return function (v) { return fmt.num(v); };
+  }
+
+  function accent() {
+    return getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#2563eb";
+  }
+  function mutedColor() {
+    return getComputedStyle(document.documentElement).getPropertyValue("--text-muted").trim() || "#5b6472";
+  }
+  function svgEl(tag, attrs) {
+    var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+  function frame(el, w, h) {
+    var svg = svgEl("svg", { viewBox: "0 0 " + w + " " + h, role: "img" });
+    el.innerHTML = "";
+    el.appendChild(svg);
+    return svg;
+  }
+
+  // maxOf guards the axis scale: empty values would give -Infinity (truthy,
+  // so "|| 1" can't catch it) and a non-positive max would flip the chart.
+  function maxOf(values) {
+    var m = values.length ? Math.max.apply(null, values) : 0;
+    return m > 0 ? m : 1;
+  }
+
+  // bar(el, {labels:[], values:[], color?, format?}) — vertical bar chart.
+  function bar(el, cfg) {
+    var W = 640, H = 280, padL = 46, padB = 30, padT = 12;
+    var svg = frame(el, W, H);
+    var max = maxOf(cfg.values);
+    var n = cfg.values.length;
+    var plotW = W - padL - 12, plotH = H - padT - padB;
+    var step = plotW / n, bw = Math.min(step * 0.62, 64);
+    var color = cfg.color || accent();
+    var f = coerceFormat(cfg.format);
+    for (var g = 0; g <= 4; g++) {
+      var gy = padT + plotH - (plotH * g) / 4;
+      svg.appendChild(svgEl("line", { x1: padL, y1: gy, x2: W - 12, y2: gy, stroke: "currentColor", "stroke-opacity": 0.08 }));
+      var lbl = svgEl("text", { x: padL - 8, y: gy + 4, "text-anchor": "end", "font-size": 10, fill: mutedColor() });
+      lbl.textContent = axisFmt((max * g) / 4);
+      svg.appendChild(lbl);
+    }
+    cfg.values.forEach(function (v, i) {
+      var bh = Math.max(0, (v / max) * plotH);
+      var x = padL + i * step + (step - bw) / 2;
+      var y = padT + plotH - bh;
+      var r = svgEl("rect", { x: x, y: y, width: bw, height: bh, rx: 4, fill: color });
+      var t = svgEl("title", {});
+      t.textContent = cfg.labels[i] + ": " + f(v);
+      r.appendChild(t);
+      svg.appendChild(r);
+      var tx = svgEl("text", { x: x + bw / 2, y: H - 10, "text-anchor": "middle", "font-size": 11, fill: mutedColor() });
+      tx.textContent = cfg.labels[i];
+      svg.appendChild(tx);
+    });
+  }
+
+  // line(el, {labels:[], values:[], color?, format?}) — single-series line.
+  function line(el, cfg) {
+    var W = 640, H = 280, padL = 46, padB = 30, padT = 12;
+    var svg = frame(el, W, H);
+    var max = maxOf(cfg.values);
+    var n = cfg.values.length;
+    var plotW = W - padL - 16, plotH = H - padT - padB;
+    var color = cfg.color || accent();
+    var f = coerceFormat(cfg.format);
+    for (var g = 0; g <= 4; g++) {
+      var gy = padT + plotH - (plotH * g) / 4;
+      svg.appendChild(svgEl("line", { x1: padL, y1: gy, x2: W - 16, y2: gy, stroke: "currentColor", "stroke-opacity": 0.08 }));
+      var lbl = svgEl("text", { x: padL - 8, y: gy + 4, "text-anchor": "end", "font-size": 10, fill: mutedColor() });
+      lbl.textContent = axisFmt((max * g) / 4);
+      svg.appendChild(lbl);
+    }
+    var pts = cfg.values.map(function (v, i) {
+      var x = padL + (n === 1 ? plotW / 2 : (plotW * i) / (n - 1));
+      var y = padT + plotH - (v / max) * plotH;
+      return [x, y];
+    });
+    var d = pts.map(function (p, i) { return (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1); }).join(" ");
+    svg.appendChild(svgEl("path", { d: d, fill: "none", stroke: color, "stroke-width": 2, "stroke-linejoin": "round" }));
+    pts.forEach(function (p, i) {
+      var c = svgEl("circle", { cx: p[0], cy: p[1], r: 3.5, fill: color });
+      var t = svgEl("title", {});
+      t.textContent = cfg.labels[i] + ": " + f(cfg.values[i]);
+      c.appendChild(t);
+      svg.appendChild(c);
+      var tx = svgEl("text", { x: p[0], y: H - 10, "text-anchor": "middle", "font-size": 11, fill: mutedColor() });
+      tx.textContent = cfg.labels[i];
+      svg.appendChild(tx);
+    });
+  }
+
+  // donut(el, {labels:[], values:[], colors?}) — donut with center total.
+  function donut(el, cfg) {
+    var W = 320, H = 280, cx = W / 2, cy = H / 2, R = 92, r = 58;
+    var svg = frame(el, W, H);
+    var total = cfg.values.reduce(function (a, b) { return a + b; }, 0) || 1;
+    var palette = cfg.colors || [accent(), "#1baf7a", "#eda100", "#e34948", "#4a3aa7", "#e87ba4"];
+    var a0 = -Math.PI / 2;
+    cfg.values.forEach(function (v, i) {
+      var a1 = a0 + (v / total) * Math.PI * 2;
+      var large = a1 - a0 > Math.PI ? 1 : 0;
+      var p = ["M", cx + R * Math.cos(a0), cy + R * Math.sin(a0),
+        "A", R, R, 0, large, 1, cx + R * Math.cos(a1), cy + R * Math.sin(a1),
+        "L", cx + r * Math.cos(a1), cy + r * Math.sin(a1),
+        "A", r, r, 0, large, 0, cx + r * Math.cos(a0), cy + r * Math.sin(a0), "Z"].join(" ");
+      var path = svgEl("path", { d: p, fill: palette[i % palette.length] });
+      var t = svgEl("title", {});
+      t.textContent = cfg.labels[i] + ": " + fmt.num(v) + " (" + fmt.pct(v / total) + ")";
+      path.appendChild(t);
+      svg.appendChild(path);
+      a0 = a1;
+    });
+    var center = svgEl("text", { x: cx, y: cy + 5, "text-anchor": "middle", "font-size": 20, "font-weight": 650, fill: "currentColor" });
+    center.textContent = fmt.num(total);
+    svg.appendChild(center);
+  }
+
+  window.skipShell = { fmt: fmt };
+  window.skipChart = { bar: bar, line: line, donut: donut };
+})();
+
+</script>
+</body>
+</html>
